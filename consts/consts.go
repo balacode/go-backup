@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
-// go-backup/cons/constants.go
+// go-backup/consts/consts.go
 
-package cons
+package consts
 
 // Version is the current version of this utility.
 const Version = "0.0.1"
