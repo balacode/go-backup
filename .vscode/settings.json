@@ -1,7 +1,13 @@
 {
     "cSpell.words": [
+        "balacode",
         "ciphertext",
         "consts",
+        "dylib",
+        "Println",
+        "Sprintf",
+        "struct",
+        "syscall",
         "uncompresses"
     ]
 }
