@@ -15,7 +15,7 @@ func main() {
 	runCommand(os.Args)
 }
 
-// runCommand runs the command, passing it arguments from the comand line.
+// runCommand runs the command, passing it arguments from the command line.
 // (You could pass it a different set of arguments for testing.)
 func runCommand(osArgs []string) {
 	started := time.Now()
