@@ -4,6 +4,8 @@
 package storage
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"time"
 
@@ -44,6 +46,44 @@ func ReadFile(path string) (*File, error) {
 		Content: content,
 	}
 	return fl, nil
+}
+
+// WriteEncryptedMetadata encrypts and writes file metadata to writer 'wr'.
+// The metadata consists of file size, modified time, hash and path.
+func (fl *File) WriteEncryptedMetadata(
+	wr io.Writer,
+	enc *security.Encryption,
+) error {
+	var plaintext []byte
+	{
+		buf := bytes.NewBuffer(make([]byte, 0, 8+8+64+len(fl.Path)))
+		if err := WriteUint64(buf, uint64(fl.Size)); err != nil {
+			return logging.Error(0xE0B5D1, err)
+		}
+		modTimeUnix := fl.ModTime.Unix()
+		if err := WriteUint64(buf, uint64(modTimeUnix)); err != nil {
+			return logging.Error(0xE56E03, err)
+		}
+		if err := WriteBytes(buf, fl.Hash[:]); err != nil {
+			return logging.Error(0xE51F11, err)
+		}
+		if err := WriteString(buf, fl.Path); err != nil {
+			return logging.Error(0xE1C6E6, err)
+		}
+		plaintext = buf.Bytes()
+	}
+	ciphertext, err := enc.EncryptBytes(plaintext)
+	if err != nil {
+		return logging.Error(0xE8A2DA, err)
+	}
+	n := uint64(len(ciphertext))
+	if err := WriteUint64(wr, n); err != nil {
+		return logging.Error(0xE6AF25, err)
+	}
+	if err := WriteBytes(wr, ciphertext); err != nil {
+		return logging.Error(0xE8F66C, err)
+	}
+	return nil
 }
 
 // end
