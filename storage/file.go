@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/balacode/go-backup/compression"
 	"github.com/balacode/go-backup/logging"
 	"github.com/balacode/go-backup/security"
 )
@@ -82,6 +83,29 @@ func (fl *File) WriteEncryptedMetadata(
 	}
 	if err := WriteBytes(wr, ciphertext); err != nil {
 		return logging.Error(0xE8F66C, err)
+	}
+	return nil
+}
+
+// WriteEncryptedContent writes the file's content to writer 'wr'.
+func (fl *File) WriteEncryptedContent(
+	wr io.Writer,
+	enc *security.Encryption,
+) error {
+	plaintext, err := compression.ZipBytes(fl.Content)
+	if err != nil {
+		return logging.Error(0xE7E12A, err)
+	}
+	ciphertext, err := enc.EncryptBytes(plaintext)
+	if err != nil {
+		return logging.Error(0xE07DB6, err)
+	}
+	n := uint64(len(ciphertext))
+	if err := WriteUint64(wr, n); err != nil {
+		return logging.Error(0xE79C2C, err)
+	}
+	if err := WriteBytes(wr, ciphertext); err != nil {
+		return logging.Error(0xE7DE95, err)
 	}
 	return nil
 }
