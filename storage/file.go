@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/balacode/go-backup/compression"
@@ -49,6 +50,17 @@ func ReadFile(path string) (*File, error) {
 		Content: content,
 	}
 	return fl, nil
+}
+
+// SetRelativePath adjusts the file's Path by making
+// it relative to the 'path' parameter.
+func (fl *File) SetRelativePath(path string) {
+	path = strings.ToLower(path)
+	flPath := strings.ToLower(fl.Path)
+	if strings.HasPrefix(flPath, path) {
+		n := len(path)
+		fl.Path = fl.Path[n:]
+	}
 }
 
 // WriteEncryptedMetadata encrypts and writes file metadata to writer 'wr'.
