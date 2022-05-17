@@ -52,6 +52,76 @@ func ReadFile(path string) (*File, error) {
 	return fl, nil
 }
 
+// ReadArchivedFile creates a File by reading and decrypting it from
+// an open archive file (the 'rd' reader) at the specified position.
+//
+// If 'loadContent' is true, loads the file's contents, otherwise
+// only reads the file's metadata (size, path, etc.)
+//
+func ReadArchivedFile(
+	rd io.ReadSeeker,
+	pos int64,
+	loadContent bool,
+	enc *security.Encryption,
+) (
+	*File, error,
+) {
+	_, err := rd.Seek(pos, 0)
+	if err != nil {
+		return nil, logging.Error(0xE06C1B, err)
+	}
+	err = ReadBOFMark(rd, pos)
+	if err != nil {
+		return nil, logging.Error(0xE5B2E2, err)
+	}
+	fl, err := readArchivedFileMetadata(rd, enc)
+	if err != nil {
+		return nil, logging.Error(0xE3FF18, err)
+	}
+	if fl.Size == 0 {
+		return fl, nil
+	}
+	if !loadContent {
+		return fl, nil
+	}
+	size, err := ReadUint64(rd)
+	if err != nil {
+		return nil, logging.Error(0xE5D62D, err)
+	}
+	ciphertext := make([]byte, size)
+	n, err := rd.Read(ciphertext)
+	if err != nil {
+		return nil, logging.Error(0xE1AA28, err)
+	}
+	if uint64(n) != size {
+		msg := fmt.Sprintf("n:%v != len(ciphertext):%v", n, len(ciphertext))
+		return nil, logging.Error(0xE6EE90, msg)
+	}
+	plaintext, err := enc.DecryptBytes(ciphertext)
+	if err != nil {
+		return nil, logging.Error(0xE9CB8B, err)
+	}
+	plaintext, err = compression.UnzipBytes(plaintext)
+	if err != nil {
+		return nil, logging.Error(0xE2F34D, err)
+	}
+	if uint64(len(plaintext)) != fl.Size {
+		msg := fmt.Sprintf("len(plaintext):%v != fl.Size:%v",
+			len(plaintext), fl.Size)
+		return nil, logging.Error(0xE6CA65, msg)
+	}
+	plaintextHash := security.MakeHash(plaintext)
+	if bytes.Compare(plaintextHash[:], fl.Hash[:]) != 0 {
+		msg := fmt.Sprintf("plaintextHash:%v != fl.Hash:%v",
+			plaintextHash, fl.Hash)
+		return nil, logging.Error(0xE49C80, msg)
+	}
+	fl.Content = plaintext
+	return fl, nil
+}
+
+// -----------------------------------------------------------------------------
+
 // SetRelativePath adjusts the file's Path by making
 // it relative to the 'path' parameter.
 func (fl *File) SetRelativePath(path string) {
