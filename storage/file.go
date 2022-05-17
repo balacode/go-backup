@@ -5,6 +5,8 @@ package storage
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -108,6 +110,61 @@ func (fl *File) WriteEncryptedContent(
 		return logging.Error(0xE7DE95, err)
 	}
 	return nil
+}
+
+// -----------------------------------------------------------------------------
+
+// readArchivedFileMetadata reads metadata from an archive.
+func readArchivedFileMetadata(
+	rd io.Reader,
+	enc *security.Encryption,
+) (*File, error) {
+	metaLen, err := ReadUint64(rd)
+	if err != nil {
+		return nil, logging.Error(0xE26B82, err)
+	}
+	ciphertext := make([]byte, metaLen)
+	n, err := rd.Read(ciphertext)
+	if err != nil {
+		return nil, logging.Error(0xE53EB5, err)
+	}
+	if uint64(n) != metaLen {
+		msg := fmt.Sprintf("n:%v != metaLen:%v", n, metaLen)
+		return nil, logging.Error(0xE9A8C7, msg)
+	}
+	plaintext, err := enc.DecryptBytes(ciphertext)
+	if err != nil {
+		return nil, logging.Error(0xE07A7C, err)
+	}
+	buf := bytes.NewBuffer(plaintext)
+
+	size, err := ReadUint64(buf)
+	if err != nil {
+		return nil, logging.Error(0xE6AD91, err)
+	}
+	modTimeUnix, err := ReadUint64(buf)
+	if err != nil {
+		return nil, logging.Error(0xE5FA20, err)
+	}
+	hash := [64]byte{}
+	n, err = buf.Read(hash[:])
+	if err != nil {
+		return nil, logging.Error(0xE88C50, err)
+	}
+	if n != 64 {
+		const msg = "hash size is not 64 bytes"
+		return nil, logging.Error(0xE8D04D, msg)
+	}
+	path, err := buf.ReadString(0)
+	if err != nil && !errors.Is(err, io.EOF) {
+		return nil, logging.Error(0xE2E33E, err)
+	}
+	return &File{
+		Size:    size,
+		ModTime: time.Unix(int64(modTimeUnix), 0),
+		Hash:    hash,
+		Path:    path,
+	}, nil
 }
 
 // end
