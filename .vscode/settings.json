@@ -4,6 +4,7 @@
         "ciphertext",
         "consts",
         "dylib",
+        "Mkdir",
         "Println",
         "Sprintf",
         "struct",
