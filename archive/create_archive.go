@@ -15,15 +15,15 @@ import (
 )
 
 // CreateArchive creates an archive in 'archiveFile', by compressing and
-// encrypting all files in 'backupPath' using 'enc' for encryption.
+// encrypting all files in 'sourcePath' using 'enc' for encryption.
 func CreateArchive(
 	archiveFile string,
-	backupPath string,
+	sourcePath string,
 	enc *security.Encryption,
 ) error {
 
 	archiveFile = strings.TrimSpace(archiveFile)
-	backupPath = strings.TrimSpace(backupPath)
+	sourcePath = strings.TrimSpace(sourcePath)
 
 	// validate arguments
 	switch {
@@ -35,12 +35,12 @@ func CreateArchive(
 		msg := "file already exists: " + archiveFile
 		return logging.Error(0xE85E89, msg)
 
-	case backupPath == "":
-		const msg = "backup path not specified"
+	case sourcePath == "":
+		const msg = "source path not specified"
 		return logging.Error(0xE22A34, msg)
 
-	case !storage.ExistsDir(backupPath):
-		msg := "backup path not found"
+	case !storage.ExistsDir(sourcePath):
+		msg := "source path not found"
 		return logging.Error(0xE51EF7, msg)
 	}
 	if err := enc.Validate(); err != nil {
@@ -54,10 +54,10 @@ func CreateArchive(
 	}
 	defer archive.Close()
 
-	// add all files in backupPath to the archive
+	// add all files in sourcePath to the archive
 	sn := -1
 	filepath.Walk(
-		backupPath,
+		sourcePath,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return logging.Error(0xE46E8F, err)
@@ -70,7 +70,7 @@ func CreateArchive(
 			if err != nil {
 				return logging.Error(0xE0E1D1, err)
 			}
-			fl.SetRelativePath(backupPath)
+			fl.SetRelativePath(sourcePath)
 			if fl.Size != uint64(info.Size()) {
 				msg := fmt.Sprintf("fl.Size:%v != info.Size():%v",
 					fl.Size, info.Size())
