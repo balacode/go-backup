@@ -66,18 +66,8 @@ func parseOSArgs(osArgs []string) *Args {
 	args := make([]string, len(osArgs)-1)
 	copy(args, osArgs[1:])
 
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		if !strings.HasPrefix(arg, "-") {
-			continue
-		}
-		s := strings.TrimLeft(arg, "-")
-		if (s == "p" || s == "password") && i < (len(args)-1) {
-			ret.Password = args[i+1]
-			args[i], args[i+1] = "", ""
-			i++
-		}
-	}
+	ret.Password, args = extractNamedArg(args, "p", "pwd")
+
 	pull := func() string {
 		for i, arg := range args {
 			if arg != "" {
@@ -90,6 +80,39 @@ func parseOSArgs(osArgs []string) *Args {
 	ret.Source = pull()
 	ret.Target = pull()
 	return ret
+}
+
+// extractNamedArg returns the value of the specified named argument,
+// as well as 'argsIn' with the argument and value removed from args.
+func extractNamedArg(
+	args []string,
+	argName ...string,
+) (
+	argValue string,
+	argsOut []string,
+) {
+	argsOut = make([]string, 0, len(args))
+	foundName := false
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if strings.HasPrefix(arg, "-") {
+			a := strings.TrimLeft(arg, "-")
+			for _, b := range argName {
+				b = strings.TrimLeft(arg, "-")
+				if a == b {
+					foundName = true
+					break
+				}
+			}
+			if foundName && i < (len(args)-1) {
+				argValue = args[i+1]
+				i++
+				continue
+			}
+		}
+		argsOut = append(argsOut, args[i])
+	}
+	return argValue, argsOut
 }
 
 // end
