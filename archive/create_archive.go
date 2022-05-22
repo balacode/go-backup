@@ -16,8 +16,8 @@ import (
 // CreateArchive creates an archive in 'archiveFile', by compressing and
 // encrypting all files in 'backupPath' using 'enc' for encryption.
 func CreateArchive(
-	backupPath string,
 	archiveFile string,
+	backupPath string,
 	enc *security.Encryption,
 ) error {
 	if err := enc.Validate(); err != nil {

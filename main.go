@@ -36,7 +36,7 @@ func runCommand(osArgs []string) {
 	fmt.Println(started.Format(consts.TimestampFormat) + ": started")
 	switch args.Command {
 	case consts.CreateArchive:
-		err := archive.CreateArchive(args.Source, args.Target, enc)
+		err := archive.CreateArchive(args.Target, args.Source, enc)
 		if err != nil {
 			logging.Error(0xE8D6D4, err)
 			return
