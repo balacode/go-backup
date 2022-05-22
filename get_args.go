@@ -8,7 +8,6 @@ import (
 
 	"github.com/balacode/go-backup/consts"
 	"github.com/balacode/go-backup/logging"
-	"github.com/balacode/go-backup/security"
 )
 
 // Args contains parsed command-line arguments passed to the command.
@@ -49,14 +48,6 @@ func GetArgs(osArgs []string) (*Args, error) {
 	case sourceIsArchive && targetIsArchive:
 		const msg = "archive can be both source and target"
 		return nil, logging.Error(0xE40F46, msg)
-	}
-	if ret.Password == "" {
-		confirm := targetIsArchive
-		pwd, err := security.InputPassword(confirm)
-		if err != nil {
-			return nil, logging.Error(0xE7AC7A, err)
-		}
-		ret.Password = pwd
 	}
 	if targetIsArchive {
 		ret.Command = consts.CreateArchive

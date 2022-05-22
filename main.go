@@ -26,6 +26,17 @@ func runCommand(osArgs []string) {
 		fmt.Println(err)
 		return
 	}
+	if args.Password == "" {
+		if args.Password == "" {
+			confirm := args.Command == consts.CreateArchive
+			pwd, err := security.InputPassword(confirm)
+			if err != nil {
+				logging.Error(0xE25BD2, err)
+				return
+			}
+			args.Password = pwd
+		}
+	}
 	started := time.Now()
 	key := security.KeyFromPassword(args.Password)
 	enc, err := security.NewEncryption(key)
