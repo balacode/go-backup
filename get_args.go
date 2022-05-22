@@ -27,21 +27,23 @@ type Args struct {
 //
 func GetArgs(osArgs []string) (*Args, error) {
 
+	// copy osArgs ignoring the first arg (program's name)
 	args := make([]string, len(osArgs)-1)
 	copy(args, osArgs[1:])
 
 	ret := &Args{}
-	ret.Password, args = extractNamedArg(args, "p", "pwd")
+	ret.Password, args = extractNamedArg(args, "p", "pwd", "password")
 	ret.Source, args = extractNextArg(args)
 	ret.Target, args = extractNextArg(args)
 
 	sourceIsArchive := strings.Contains(ret.Source, consts.ArchiveExt)
 	targetIsArchive := strings.Contains(ret.Target, consts.ArchiveExt)
 
-	if targetIsArchive {
+	switch {
+	case targetIsArchive:
 		ret.Command = consts.CreateArchive
-	}
-	if sourceIsArchive {
+
+	case sourceIsArchive:
 		ret.Command = consts.ExtractArchive
 	}
 	return ret, nil
