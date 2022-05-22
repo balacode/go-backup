@@ -23,7 +23,7 @@ func main() {
 func runCommand(osArgs []string) {
 	args, err := GetArgs(osArgs)
 	if err != nil {
-		fmt.Println(err)
+		logging.Error(0xE2D26E, err)
 		return
 	}
 	if args.Password == "" {
@@ -56,6 +56,18 @@ func runCommand(osArgs []string) {
 		err := archive.ExtractArchive(args.Source, args.Target, enc)
 		if err != nil {
 			logging.Error(0xE40E36, err)
+			return
+		}
+	case consts.ListArchive:
+		err := archive.ListArchive(args.Source, enc)
+		if err != nil {
+			logging.Error(0xE64AD6, err)
+			return
+		}
+	case consts.VerifyArchive:
+		err := archive.VerifyArchive(args.Source, enc)
+		if err != nil {
+			logging.Error(0xE8DB9C, err)
 			return
 		}
 	}
