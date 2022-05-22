@@ -41,4 +41,25 @@ func Test_extractNamedArg_(t *testing.T) {
 	}
 }
 
+func Test_extractNextArg_(t *testing.T) {
+	{
+		v, argsOut := extractNextArg([]string{})
+		if v != "" {
+			t.Errorf("0xEE0C65")
+		}
+		if !reflect.DeepEqual(argsOut, []string{}) {
+			t.Errorf("0xEE00DC")
+		}
+	}
+	{
+		v, argsOut := extractNextArg([]string{"123", "456", "789"})
+		if v != "123" {
+			t.Errorf("0xEE5AF1")
+		}
+		if !reflect.DeepEqual(argsOut, []string{"456", "789"}) {
+			t.Errorf("0xEE0FA7")
+		}
+	}
+}
+
 // end

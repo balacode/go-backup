@@ -68,17 +68,8 @@ func parseOSArgs(osArgs []string) *Args {
 
 	ret.Password, args = extractNamedArg(args, "p", "pwd")
 
-	pull := func() string {
-		for i, arg := range args {
-			if arg != "" {
-				args[i] = ""
-				return arg
-			}
-		}
-		return ""
-	}
-	ret.Source = pull()
-	ret.Target = pull()
+	ret.Source, args = extractNextArg(args)
+	ret.Target, args = extractNextArg(args)
 	return ret
 }
 
@@ -113,6 +104,15 @@ func extractNamedArg(
 		argsOut = append(argsOut, args[i])
 	}
 	return argValue, argsOut
+}
+
+// extractNextArg returns the value of the next (i.e. first) argument in args,
+// as well as 'argsIn' with the argument value removed from args.
+func extractNextArg(argsIn []string) (argValue string, argsOut []string) {
+	if len(argsIn) < 1 {
+		return "", argsIn
+	}
+	return argsIn[0], argsIn[1:]
 }
 
 // end
