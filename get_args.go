@@ -11,15 +11,15 @@ import (
 	"github.com/balacode/go-backup/security"
 )
 
-// ParsedArgs contains parsed command-line arguments passed to the command.
-type ParsedArgs struct {
+// Args contains parsed command-line arguments passed to the command.
+type Args struct {
 	Command  consts.Action
 	Source   string
 	Target   string
 	Password string
 }
 
-// GetArgs parses command-line arguments and returns a ParsedArgs struct.
+// GetArgs parses command-line arguments and returns an Args struct.
 //
 // You should pass os.Args in osArgs parameter, except when testing.
 //
@@ -27,7 +27,7 @@ type ParsedArgs struct {
 //
 // Also, if a password hasn't been specified, displays a password prompt.
 //
-func GetArgs(osArgs []string) (*ParsedArgs, error) {
+func GetArgs(osArgs []string) (*Args, error) {
 	var (
 		ret             = parseOSArgs(osArgs)
 		sourceIsArchive = strings.Contains(ret.Source, consts.ArchiveExt)
@@ -67,11 +67,11 @@ func GetArgs(osArgs []string) (*ParsedArgs, error) {
 	return ret, nil
 }
 
-// parseOSArgs is called by GetArgs() to parse command-line arguments into
-// ParsedArgs without checking their values or doing additional i/o.
-func parseOSArgs(osArgs []string) *ParsedArgs {
+// parseOSArgs is called by GetArgs() to parse command-line arguments
+// into Args without checking their values or doing additional i/o.
+func parseOSArgs(osArgs []string) *Args {
 
-	ret := &ParsedArgs{}
+	ret := &Args{}
 	args := make([]string, len(osArgs)-1)
 	copy(args, osArgs[1:])
 
