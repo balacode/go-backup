@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/balacode/go-backup/logging"
 	"github.com/balacode/go-backup/security"
@@ -20,18 +21,40 @@ func CreateArchive(
 	backupPath string,
 	enc *security.Encryption,
 ) error {
+
+	archiveFile = strings.TrimSpace(archiveFile)
+	backupPath = strings.TrimSpace(backupPath)
+
+	// validate arguments
+	switch {
+	case archiveFile == "":
+		const msg = "archive file not specified"
+		return logging.Error(0xE5C58C, msg)
+
+	case storage.ExistsFile(archiveFile):
+		msg := "file already exists: " + archiveFile
+		return logging.Error(0xE85E89, msg)
+
+	case backupPath == "":
+		const msg = "backup path not specified"
+		return logging.Error(0xE22A34, msg)
+
+	case !storage.ExistsDir(backupPath):
+		msg := "backup path not found"
+		return logging.Error(0xE51EF7, msg)
+	}
 	if err := enc.Validate(); err != nil {
 		return logging.Error(0xE3F9D1, err)
 	}
-	if storage.ExistsPath(archiveFile) {
-		msg := "file already exists: " + archiveFile
-		return logging.Error(0xE85E89, msg)
-	}
+
+	// create the archive file
 	archive, err := os.Create(archiveFile)
 	if err != nil {
 		return logging.Error(0xE5C48A, err)
 	}
 	defer archive.Close()
+
+	// add all files in backupPath to the archive
 	sn := -1
 	filepath.Walk(
 		backupPath,
@@ -39,7 +62,7 @@ func CreateArchive(
 			if err != nil {
 				return logging.Error(0xE46E8F, err)
 			}
-			if info.IsDir() { // ignore directories
+			if info.IsDir() {
 				return nil
 			}
 			sn++
